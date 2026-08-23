@@ -1,0 +1,11 @@
+{
+  "name": "email-job-scheduler",
+  "private": true,
+  "scripts": {
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:typecheck": "npm --prefix backend run typecheck",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test"
+  }
+}

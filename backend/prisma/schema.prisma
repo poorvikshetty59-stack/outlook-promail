@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  active
+  completed
+}
+
+enum EmailStatus {
+  scheduled
+  processing
+  sent
+  failed
+}
+
+model User {
+  id           String     @id @default(uuid())
+  googleId     String     @unique
+  email        String     @unique
+  name         String
+  avatarUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  campaigns    Campaign[]
+}
+
+model Sender {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  host         String
+  port         Int
+  username     String
+  password     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  emails       ScheduledEmail[]
+}
+
+model Campaign {
+  id                 String         @id @default(uuid())
+  userId             String
+  subject            String
+  body               String
+  requestedStartTime DateTime
+  delayMs            Int
+  requestedHourlyLimit Int
+  effectiveHourlyLimit Int
+  status             CampaignStatus @default(active)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails             ScheduledEmail[]
+  @@index([userId, createdAt])
+}
+
+model ScheduledEmail {
+  id            String      @id @default(uuid())
+  campaignId    String
+  senderId      String?
+  recipient     String
+  scheduledTime DateTime
+  status        EmailStatus @default(scheduled)
+  sentAt        DateTime?
+  failedAt      DateTime?
+  attempts      Int         @default(0)
+  messageId     String?
+  error         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  campaign      Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sender        Sender?     @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  @@index([status, scheduledTime])
+  @@index([campaignId, status])
+}
